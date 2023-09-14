@@ -7,15 +7,15 @@ All Rights Reserved 2019-2020.
 
 #include <torch/serialize/tensor.h>
 #include <vector>
-#include <THC/THC.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include "ball_query_bin_gpu.h"
 
-extern THCState *state;
+#include <ATen/cuda/CUDAContext.h>
+#include <ATen/cuda/CUDAEvent.h>
 
 #define CHECK_CUDA(x) do { \
-  if (!x.type().is_cuda()) { \
+  if (!x.is_cuda()) { \
     fprintf(stderr, "%s must be CUDA tensor at %s:%d\n", #x, __FILE__, __LINE__); \
     exit(-1); \
   } \
@@ -36,12 +36,12 @@ int ball_query_bin_wrapper_stack(int B, int M, float radius, int nsample, int bi
     CHECK_INPUT(new_xyz_batch_cnt_tensor);
     CHECK_INPUT(xyz_batch_cnt_tensor);
 
-    const float *new_xyz = new_xyz_tensor.data<float>();
-    const float *xyz = xyz_tensor.data<float>();
-    const int *new_xyz_batch_cnt = new_xyz_batch_cnt_tensor.data<int>();
-    const int *xyz_batch_cnt = xyz_batch_cnt_tensor.data<int>();
-    int *idx = idx_tensor.data<int>();
-    int *bin_idx = bin_idx_tensor.data<int>();
+    const float *new_xyz = new_xyz_tensor.data_ptr<float>();
+    const float *xyz = xyz_tensor.data_ptr<float>();
+    const int *new_xyz_batch_cnt = new_xyz_batch_cnt_tensor.data_ptr<int>();
+    const int *xyz_batch_cnt = xyz_batch_cnt_tensor.data_ptr<int>();
+    int *idx = idx_tensor.data_ptr<int>();
+    int *bin_idx = bin_idx_tensor.data_ptr<int>();
 
     ball_query_bin_kernel_launcher_stack(B, M, radius, nsample, bin_nsample, new_xyz, new_xyz_batch_cnt, xyz, xyz_batch_cnt, idx, bin_idx);
     return 1;

@@ -1,13 +1,14 @@
 #include <torch/serialize/tensor.h>
 #include <ATen/cuda/CUDAContext.h>
+#include <ATen/cuda/CUDAEvent.h>
 #include <vector>
-#include <THC/THC.h>
+
 
 #include "sampling_gpu.h"
 
-extern THCState *state;
+
 #define CHECK_CUDA(x) do { \
-  if (!x.type().is_cuda()) { \
+  if (!x.is_cuda()) { \
     fprintf(stderr, "%s must be CUDA tensor at %s:%d\n", #x, __FILE__, __LINE__); \
     exit(-1); \
   } \
@@ -28,9 +29,9 @@ int furthest_point_sampling_wrapper(int b, int n, int m,
     CHECK_INPUT(temp_tensor);
     CHECK_INPUT(idx_tensor);
 
-    const float *points = points_tensor.data<float>();
-    float *temp = temp_tensor.data<float>();
-    int *idx = idx_tensor.data<int>();
+    const float *points = points_tensor.data_ptr<float>();
+    float *temp = temp_tensor.data_ptr<float>();
+    int *idx = idx_tensor.data_ptr<int>();
 
     furthest_point_sampling_kernel_launcher(b, n, m, points, temp, idx);
     return 1;

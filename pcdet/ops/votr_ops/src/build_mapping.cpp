@@ -5,15 +5,16 @@ Written by Jiageng Mao
 
 #include <torch/serialize/tensor.h>
 #include <vector>
-#include <THC/THC.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include "build_mapping_gpu.h"
 
-extern THCState *state;
+#include <ATen/cuda/CUDAContext.h>
+#include <ATen/cuda/CUDAEvent.h>
+
 
 #define CHECK_CUDA(x) do { \
-  if (!x.type().is_cuda()) { \
+  if (!x.is_cuda()) { \
     fprintf(stderr, "%s must be CUDA tensor at %s:%d\n", #x, __FILE__, __LINE__); \
     exit(-1); \
   } \
@@ -32,9 +33,9 @@ int build_mapping_with_tensor_wrapper(int x_max, int y_max, int z_max, int num_v
     CHECK_INPUT(v_bs_cnt_tensor);
     CHECK_INPUT(xyz_to_vidx_tensor);
 
-    const int *v_indices = v_indices_tensor.data<int>();
-    const int *v_bs_cnt = v_bs_cnt_tensor.data<int>();
-    int *xyz_to_vidx = xyz_to_vidx_tensor.data<int>();
+    const int *v_indices = v_indices_tensor.data_ptr<int>();
+    const int *v_bs_cnt = v_bs_cnt_tensor.data_ptr<int>();
+    int *xyz_to_vidx = xyz_to_vidx_tensor.data_ptr<int>();
 
     build_mapping_with_tensor_kernel_launcher(x_max, y_max, z_max, num_voxels, v_indices, v_bs_cnt, xyz_to_vidx);
     return 1;
@@ -48,10 +49,10 @@ int downsample_with_tensor_wrapper(int x_max, int y_max, int z_max, int x_stride
     CHECK_INPUT(xyz_to_vidx_tensor);
     CHECK_INPUT(vcount_tensor);
 
-    const int *v_indices = v_indices_tensor.data<int>();
-    int *ds_v_indices = ds_v_indices_tensor.data<int>();
-    int *xyz_to_vidx = xyz_to_vidx_tensor.data<int>();
-    int *vcount = vcount_tensor.data<int>();
+    const int *v_indices = v_indices_tensor.data_ptr<int>();
+    int *ds_v_indices = ds_v_indices_tensor.data_ptr<int>();
+    int *xyz_to_vidx = xyz_to_vidx_tensor.data_ptr<int>();
+    int *vcount = vcount_tensor.data_ptr<int>();
 
     downsample_with_tensor_kernel_launcher(x_max, y_max, z_max, x_stride, y_stride, z_stride, num_voxels, num_ds_voxels,
                                                 v_indices, ds_v_indices, xyz_to_vidx, vcount);
@@ -64,9 +65,9 @@ int build_mapping_with_hash_wrapper(int x_max, int y_max, int z_max, int num_vox
     CHECK_INPUT(v_bs_cnt_tensor);
     CHECK_INPUT(xyz_to_vidx_tensor);
 
-    const int *v_indices = v_indices_tensor.data<int>();
-    const int *v_bs_cnt = v_bs_cnt_tensor.data<int>();
-    int *xyz_to_vidx = xyz_to_vidx_tensor.data<int>();
+    const int *v_indices = v_indices_tensor.data_ptr<int>();
+    const int *v_bs_cnt = v_bs_cnt_tensor.data_ptr<int>();
+    int *xyz_to_vidx = xyz_to_vidx_tensor.data_ptr<int>();
 
     build_mapping_with_hash_kernel_launcher(x_max, y_max, z_max, num_voxels, hash_size, v_indices, v_bs_cnt, xyz_to_vidx);
     return 1;
@@ -80,10 +81,10 @@ int downsample_with_hash_wrapper(int x_max, int y_max, int z_max, int x_stride, 
     CHECK_INPUT(xyz_to_vidx_tensor);
     CHECK_INPUT(vcount_tensor);
 
-    const int *v_indices = v_indices_tensor.data<int>();
-    int *ds_v_indices = ds_v_indices_tensor.data<int>();
-    int *xyz_to_vidx = xyz_to_vidx_tensor.data<int>();
-    int *vcount = vcount_tensor.data<int>();
+    const int *v_indices = v_indices_tensor.data_ptr<int>();
+    int *ds_v_indices = ds_v_indices_tensor.data_ptr<int>();
+    int *xyz_to_vidx = xyz_to_vidx_tensor.data_ptr<int>();
+    int *vcount = vcount_tensor.data_ptr<int>();
 
     downsample_with_hash_kernel_launcher(x_max, y_max, z_max, x_stride, y_stride, z_stride, num_voxels, num_ds_voxels, hash_size,
                                                 v_indices, ds_v_indices, xyz_to_vidx, vcount);

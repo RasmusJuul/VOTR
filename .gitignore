@@ -14,3 +14,4 @@ venv/
 *.zip
 *.bin
 *.h5
+**/.ipynb_checkpoints/
